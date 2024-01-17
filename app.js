@@ -68,3 +68,10 @@ app.delete("/contacts/:id", (req, res) => {
     contacts.splice(index, 1);
     res.json({ message: `Deleted contact with id ${id}` });
 });
+
+app.put("/contacts/:id/favorite", (req, res) => {
+    const id = Number(req.params.id);
+    const contact = contacts.find(contact => contact.id === id);
+    contact.favorite = !contact.favorite;
+    res.json(contact);
+});
