@@ -21,9 +21,10 @@ app.get("/contacts", (req, res) => {
 });
 
 app.get("/contacts/search", (req, res) => {
-    const searchString = req.query.q;
+    const searchString = req.query.q.toLowerCase();
     const filteredContacts = contacts.filter(
-        contact => contact.first.includes(searchString) || contact.last.includes(searchString)
+        contact =>
+            contact.first.toLowerCase().includes(searchString) || contact.last.toLowerCase().includes(searchString)
     );
     res.json(filteredContacts);
 });
