@@ -33,7 +33,12 @@ server.get("/contacts/search", (req, res) => {
         contact =>
             contact.first.toLowerCase().includes(searchString) || contact.last.toLowerCase().includes(searchString)
     );
-    res.json(filteredContacts); // return filtered contacts list as JSON
+
+    if (filteredContacts.length > 0) {
+        res.json(filteredContacts); // return filtered contacts list as JSON
+    } else {
+        res.status(404).json({ message: "Contact not found!" }); // otherwise return 404 and error message
+    }
 });
 
 // Get single contact (GET /contacts/:id)
@@ -54,7 +59,7 @@ server.post("/contacts", (req, res) => {
     const createdAt = new Date().toISOString(); // ISO string
     const newContact = { id, createdAt, ...req.body }; // merge data from request body into new contact object
     contacts.push(newContact); // push new contact object into contacts array
-    res.json(newContact); // return new contact object as JSON
+    res.json({ message: "Created new contact", id: id }); // return message and id of new contact
 });
 
 // Update contact (PUT /contacts/:id)
@@ -62,30 +67,43 @@ server.put("/contacts/:id", (req, res) => {
     const id = Number(req.params.id); // get id from request URL
     const updatedContact = req.body; // get updated properties from request body
     const contact = contacts.find(contact => contact.id === id); // find the contact in contacts array
+    if (contact) {
+        // update contact properties with new values
+        contact.first = updatedContact.first;
+        contact.last = updatedContact.last;
+        contact.twitter = updatedContact.twitter;
+        contact.avatar = updatedContact.avatar;
 
-    // update contact properties with new values
-    contact.first = updatedContact.first;
-    contact.last = updatedContact.last;
-    contact.twitter = updatedContact.twitter;
-    contact.avatar = updatedContact.avatar;
-
-    res.json(contact); // return updated contact
+        res.json({ message: `Updated contact with id ${id}` }); // return result from database
+    } else {
+        res.status(404).json({ message: "Contact not found!" }); // return 404 if contact was not found
+    }
 });
 
 // Delete contact (DELETE /contacts/:id)
 server.delete("/contacts/:id", (req, res) => {
     const id = Number(req.params.id); // get id from request URL
     const index = contacts.findIndex(contact => contact.id === id); // find index of contact in contacts array
-    contacts.splice(index, 1); // remove contact from contacts array
-    res.json({ message: `Deleted contact with id ${id}` }); // return message
+    if (index === -1) {
+        res.status(404).json({ message: "Contact not found!" }); // return 404 if contact was not found
+    } else {
+        contacts.splice(index, 1); // remove contact from contacts array
+
+        res.json({ message: `Deleted contact with id ${id}` }); // return message
+    }
 });
 
 // Toggle favorite property of contact (PUT /contacts/:id/favorite)
 server.put("/contacts/:id/favorite", (req, res) => {
     const id = Number(req.params.id); // get id from request URL
     const contact = contacts.find(contact => contact.id === id); // find the contact in contacts array
-    contact.favorite = !contact.favorite; // toggle favorite property
-    res.json(contact); // return updated contact
+    if (!contact) {
+        res.status(404).json({ message: "Contact not found!" }); // return 404 if contact was not found
+    } else {
+        contact.favorite = !contact.favorite; // toggle favorite property
+
+        res.json({ message: `Toggled favorite property of contact with id ${id}` }); // return message
+    }
 });
 
 // ========== Start server ========== //
