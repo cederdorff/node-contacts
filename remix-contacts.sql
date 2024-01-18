@@ -1,3 +1,4 @@
+-- Active: 1705566055231@@127.0.0.1@3306@remix_contacts
 CREATE DATABASE IF NOT EXISTS remix_contacts;
 
 CREATE TABLE contacts (
@@ -6,7 +7,8 @@ CREATE TABLE contacts (
     avatar VARCHAR(255),
     first VARCHAR(50),
     last VARCHAR(50),
-    twitter VARCHAR(50)
+    twitter VARCHAR(50),
+    favorite BOOLEAN DEFAULT FALSE
 );
 
 INSERT INTO contacts (avatar, first, last, twitter)
