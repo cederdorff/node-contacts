@@ -7,7 +7,7 @@ import contacts from "./data.js";
 
 // Create Express app
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT;
 
 // Configure middleware
 app.use(express.json()); // to parse JSON bodies
