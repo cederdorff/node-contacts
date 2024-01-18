@@ -32,7 +32,8 @@ server.get("/contacts", async (req, res) => {
 server.get("/contacts/search", async (req, res) => {
     const searchString = req.query.q.toLowerCase(); // get query string from request URL and lowercase it
     const query = "SELECT * FROM contacts WHERE LOWER(first) LIKE ? OR LOWER(last) LIKE ?"; // SQL query
-    const [results] = await db.execute(query, [`%${searchString}%`, `%${searchString}%`]); // Execute the query
+    const values = [`%${searchString}%`, `%${searchString}%`]; // values to search for
+    const [results] = await db.execute(query, values); // Execute the query
 
     res.json(results); // Send the results as JSON
 });
@@ -41,7 +42,8 @@ server.get("/contacts/search", async (req, res) => {
 server.get("/contacts/:id", async (req, res) => {
     const id = Number(req.params.id); // get id from request URL and convert it to a number
     const query = "SELECT * FROM contacts WHERE id = ?"; // SQL query
-    const [contacts] = await db.execute(query, [id]); // Execute the query
+    const values = [id]; // values to search for (id)
+    const [contacts] = await db.execute(query, values); // Execute the query
 
     if (contacts.length > 0) {
         res.json(contacts[0]); // return first contact from results as JSON
