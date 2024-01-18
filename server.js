@@ -1,7 +1,7 @@
 // Imports
 import express from "express";
 import cors from "cors";
-import contacts from "./data.js";
+import db from "./database.js";
 
 // ========== Setup ========== //
 
@@ -21,8 +21,10 @@ server.get("/", (req, res) => {
 });
 
 // Get all contacts (GET /contacts)
-server.get("/contacts", (req, res) => {
-    res.json(contacts); // return contacts list as JSON
+server.get("/contacts", async (req, res) => {
+    const query = "SELECT * FROM contacts"; // SQL query
+    const [contacts] = await db.execute(query); // Execute the query
+    res.json(contacts); // Send the results as JSON
 });
 
 // Search contacts (GET /contacts/search?q=)
