@@ -24,15 +24,16 @@ server.get("/", (req, res) => {
 server.get("/contacts", async (req, res) => {
     const query = "SELECT * FROM contacts"; // SQL query
     const [contacts] = await db.execute(query); // Execute the query
+
     res.json(contacts); // Send the results as JSON
 });
 
 // Search contacts (GET /contacts/search?q=)
 server.get("/contacts/search", async (req, res) => {
     const searchString = req.query.q.toLowerCase(); // get query string from request URL and lowercase it
-
     const query = "SELECT * FROM contacts WHERE LOWER(first) LIKE ? OR LOWER(last) LIKE ?"; // SQL query
     const [results] = await db.execute(query, [`%${searchString}%`, `%${searchString}%`]); // Execute the query
+
     res.json(results); // Send the results as JSON
 });
 
