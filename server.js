@@ -114,7 +114,7 @@ server.put("/contacts/:id/favorite", async (req, res) => {
     if (contact) {
         const newFavoriteValue = !contact.favorite; // Toggle the favorite field
         // Update the contact in the database
-        const result = await db
+        await db
             .collection("contacts")
             .updateOne(
                 { _id: new ObjectId(id) },
