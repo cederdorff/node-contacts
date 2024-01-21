@@ -45,7 +45,7 @@ server.get("/contacts/search", (req, res) => {
 // Get single contact (GET /contacts/:id)
 server.get("/contacts/:id", (req, res) => {
     const id = Number(req.params.id); // get id from request URL
-    const contact = contacts.find(contact => contact.id === id); // find the contact in contacts array
+    const contact = contacts.find(contact => contact._id === id); // find the contact in contacts array
 
     if (contact) {
         res.json(contact); // return contact as JSON if found
@@ -56,18 +56,18 @@ server.get("/contacts/:id", (req, res) => {
 
 // Create contact (POST /contacts)
 server.post("/contacts", (req, res) => {
-    const id = new Date().getTime(); // not really unique, but it's something
+    const _id = new Date().getTime(); // not really unique, but it's something
     const createdAt = new Date().toISOString(); // ISO string
-    const newContact = { id, createdAt, ...req.body }; // merge data from request body into new contact object
+    const newContact = { _id, createdAt, ...req.body }; // merge data from request body into new contact object
     contacts.push(newContact); // push new contact object into contacts array
-    res.json({ message: "Created new contact", id: id }); // return message and id of new contact
+    res.json({ message: "Created new contact", _id: _id }); // return message and id of new contact
 });
 
 // Update contact (PUT /contacts/:id)
 server.put("/contacts/:id", (req, res) => {
     const id = Number(req.params.id); // get id from request URL
     const updatedContact = req.body; // get updated properties from request body
-    const contact = contacts.find(contact => contact.id === id); // find the contact in contacts array
+    const contact = contacts.find(contact => contact._id === id); // find the contact in contacts array
     if (contact) {
         // update contact properties with new values
         contact.first = updatedContact.first;
@@ -97,7 +97,7 @@ server.delete("/contacts/:id", (req, res) => {
 // Toggle favorite property of contact (PUT /contacts/:id/favorite)
 server.put("/contacts/:id/favorite", (req, res) => {
     const id = Number(req.params.id); // get id from request URL
-    const contact = contacts.find(contact => contact.id === id); // find the contact in contacts array
+    const contact = contacts.find(contact => contact._id === id); // find the contact in contacts array
     if (!contact) {
         res.status(404).json({ message: "Contact not found!" }); // return 404 if contact was not found
     } else {
