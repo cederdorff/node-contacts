@@ -31,7 +31,8 @@ server.get("/contacts/search", (req, res) => {
     const filteredContacts = contacts.filter(
         // filter contacts array
         contact =>
-            contact.first.toLowerCase().includes(searchString) || contact.last.toLowerCase().includes(searchString)
+            contact.first.toLowerCase().includes(searchString) ||
+            contact.last.toLowerCase().includes(searchString)
     );
 
     if (filteredContacts.length > 0) {
@@ -101,7 +102,6 @@ server.put("/contacts/:id/favorite", (req, res) => {
         res.status(404).json({ message: "Contact not found!" }); // return 404 if contact was not found
     } else {
         contact.favorite = !contact.favorite; // toggle favorite property
-
         res.json({ message: `Toggled favorite property of contact with id ${id}` }); // return message
     }
 });
