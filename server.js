@@ -71,7 +71,7 @@ server.post("/contacts", async (req, res) => {
     console.log(result);
 
     if (result.acknowledged) {
-        res.json({ message: "Created new contact", id: result.insertedId }); // return message and id of new contact
+        res.json({ message: "Created new contact", _id: result.insertedId }); // return message and id of new contact
     } else {
         res.status(500).json({ message: "Failed to create new contact" }); // return error message
     }
