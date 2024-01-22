@@ -110,6 +110,9 @@ server.delete("/contacts/:id", async (req, res) => {
 });
 
 // Toggle favorite property of contact (PUT /contacts/:id/favorite)
+// The route is /contacts/:id/favorite, follows the convention of
+// specifying the resource (contacts), the identifier (:id),
+// and the action (favorite).
 server.put("/contacts/:id/favorite", async (req, res) => {
     const id = Number(req.params.id); // get id from request URL
     const query = "UPDATE contacts SET favorite = !favorite WHERE _id = ?"; // SQL query
@@ -121,6 +124,14 @@ server.put("/contacts/:id/favorite", async (req, res) => {
     } else {
         res.json({ message: `Toggled favorite property of contact with _id ${id}` }); // return message
     }
+});
+
+// get all favorites (GET /favorites)
+server.get("/favorites", async (req, res) => {
+    const query = "SELECT * FROM contacts WHERE favorite = 1"; // SQL query
+    const [contacts] = await db.execute(query); // Execute the query
+
+    res.json(contacts); // Send the results as JSON
 });
 
 // ========== Start server ========== //
