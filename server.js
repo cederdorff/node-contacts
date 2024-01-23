@@ -24,9 +24,9 @@ server.get("/", (req, res) => {
 // Get all contacts (GET /contacts)
 server.get("/contacts", async (req, res) => {
     const contacts = await db
-        .collection("contacts")
-        .find()
-        .sort({ first: 1, last: 1 })
+        .collection("contacts") // Get the contacts collection from the database
+        .find() // Get all contacts from database
+        .sort({ first: 1, last: 1 }) // Sort by first name, then last name
         .toArray(); // Get all contacts from database
     res.json(contacts); // Send the results as JSON
 });
@@ -42,9 +42,9 @@ server.get("/contacts/search", async (req, res) => {
     }; // MongoDB query
 
     const results = await db
-        .collection("contacts")
-        .find(query)
-        .sort({ first: 1, last: 1 })
+        .collection("contacts") // Get the contacts collection from the database
+        .find(query) // Find contacts matching query
+        .sort({ first: 1, last: 1 }) // Sort by first name, then last name
         .toArray(); // Execute the query
 
     res.json(results); // Send the results as JSON
@@ -67,8 +67,6 @@ server.post("/contacts", async (req, res) => {
     const newContact = req.body; // get new contact object from request body
 
     const result = await db.collection("contacts").insertOne(newContact); // Insert new contact into database
-
-    console.log(result);
 
     if (result.acknowledged) {
         res.json({ message: "Created new contact", _id: result.insertedId }); // return message and id of new contact
