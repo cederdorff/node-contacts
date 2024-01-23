@@ -36,7 +36,11 @@ server.get("/contacts/search", async (req, res) => {
     const values = [`%${searchString}%`, `%${searchString}%`]; // values to search for
     const [results] = await db.execute(query, values); // Execute the query
 
-    res.json(results); // Send the results as JSON
+    if (results.length === 0) {
+        res.status(404).json({ message: "No contacts found!" }); // otherwise return 404 and error message
+    } else {
+        res.json(results); // Send the results as JSON
+    }
 });
 
 // Get single contact (GET /contacts/:id)
