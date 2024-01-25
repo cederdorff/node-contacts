@@ -23,8 +23,11 @@ server.get("/", (req, res) => {
 
 // Get all contacts (GET /contacts)
 server.get("/contacts", async (req, res) => {
-    const contacts = await db.collection("contacts").find().toArray(); // Get all contacts from database
-    res.json(contacts); // return contacts as JSON
+    const contacts = await db
+        .collection("contacts") // Get the contacts collection from the database
+        .find() // Get all contacts from database
+        .toArray(); // Get all contacts from database
+    res.json(contacts); // Send the results as JSON
 });
 
 // Search contacts (GET /contacts/search?q=)
