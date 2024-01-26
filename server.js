@@ -52,7 +52,9 @@ server.get("/contacts/search", async (req, res) => {
 // Get single contact (GET /contacts/:id)
 server.get("/contacts/:id", async (req, res) => {
     const id = req.params.id; // get id from request URL
-    const contact = await db.collection("contacts").findOne({ _id: new ObjectId(id) }); // Get contact from database
+    const contact = await db
+        .collection("contacts")
+        .findOne({ _id: new ObjectId(id) }); // Get contact from database
 
     if (contact) {
         res.json(contact); // return first contact from results as JSON
@@ -93,7 +95,9 @@ server.put("/contacts/:id", async (req, res) => {
 server.delete("/contacts/:id", async (req, res) => {
     const id = req.params.id; // get id from request URL
 
-    const result = await db.collection("contacts").deleteOne({ _id: new ObjectId(id) }); // Delete contact from database
+    const result = await db
+        .collection("contacts")
+        .deleteOne({ _id: new ObjectId(id) }); // Delete contact from database
 
     if (result.acknowledged) {
         res.json({ message: `Deleted contact with id ${id}` }); // return message
@@ -103,10 +107,12 @@ server.delete("/contacts/:id", async (req, res) => {
 });
 
 // Toggle favorite property of contact (PUT /contacts/:id/favorite)
-server.put("/contacts/:id/favorite", async (req, res) => {
+server.patch("/contacts/:id/favorite", async (req, res) => {
     const id = req.params.id; // get id from request URL
 
-    const contact = await db.collection("contacts").findOne({ _id: new ObjectId(id) }); // Get the contact from the database
+    const contact = await db
+        .collection("contacts")
+        .findOne({ _id: new ObjectId(id) }); // Get the contact from the database
 
     if (contact) {
         const newFavoriteValue = !contact.favorite; // Toggle the favorite field
@@ -118,7 +124,9 @@ server.put("/contacts/:id/favorite", async (req, res) => {
                 { $set: { favorite: newFavoriteValue } }
             );
 
-        res.json({ message: `Toggled favorite property of contact with id ${id}` }); // return message
+        res.json({
+            message: `Toggled favorite property of contact with id ${id}`
+        }); // return message
     } else {
         res.status(404).json({ message: "Contact not found!" }); // return 404 if contact was not found
     }
