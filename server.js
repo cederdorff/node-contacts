@@ -26,6 +26,7 @@ server.get("/contacts", async (req, res) => {
     const contacts = await db
         .collection("contacts") // Get the contacts collection from the database
         .find() // Get all contacts from database
+        .sort({ first: 1, last: 1 }) // Sort by first name, then last name
         .toArray(); // Get all contacts from database
     res.json(contacts); // Send the results as JSON
 });
