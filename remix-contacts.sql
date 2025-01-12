@@ -1,6 +1,8 @@
 -- Active: 1705566055231@@127.0.0.1@3306@remix_contacts
 CREATE DATABASE IF NOT EXISTS remix_contacts;
 
+USE remix_contacts;
+
 CREATE TABLE contacts (
     _id INT PRIMARY KEY AUTO_INCREMENT,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
