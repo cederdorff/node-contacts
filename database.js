@@ -1,29 +1,32 @@
-import { MongoClient } from "mongodb";
+import mongoose from "mongoose";
 
-const client = new MongoClient(process.env.MONGODB_URI);
-
-async function getDatabase() {
+// Function to connect to the MongoDB database
+async function connectToDatabase() {
   try {
-    await client.connect();
-    const db = client.db(process.env.MONGODB_DATABASE);
-    return db;
+    await mongoose.connect(process.env.MONGODB_URI, {
+      dbName: process.env.MONGODB_DATABASE // Specify the database name
+    });
+    console.log("Connected to MongoDB");
   } catch (error) {
-    console.error("Failed to connect to the database:", error);
+    console.error("Failed to connect to MongoDB:", error);
     throw error;
   }
 }
 
-// Automatically close the database connection when the Node.js process exits
+// Automatically close the Mongoose connection when the Node.js process exits
 process.on("exit", async () => {
-  await client.close();
+  await mongoose.disconnect();
+  console.log("Mongoose connection closed on process exit");
 });
 
 // Handle CTRL+C events
 process.on("SIGINT", async () => {
-  await client.close();
+  await mongoose.disconnect();
+  console.log("Mongoose connection closed on SIGINT");
   process.exit();
 });
 
-const db = await getDatabase(); // Connect to the MongoDB database
+// Connect to the database
+await connectToDatabase();
 
-export default db;
+export default mongoose; // Export Mongoose for use in your models

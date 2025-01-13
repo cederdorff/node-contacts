@@ -1,141 +1,149 @@
 // Imports
 import express from "express";
 import cors from "cors";
-import db from "./database.js";
-import { ObjectId } from "mongodb";
+import mongoose from "./database.js";
 
 // ========== Setup ========== //
 
 // Create Express app
 const server = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 
 // Configure middleware
 server.use(express.json()); // to parse JSON bodies
 server.use(cors()); // Enable CORS for all routes
 
+// ========== Schema and Model ========== //
+
+const contactSchema = new mongoose.Schema({
+  first: String,
+  last: String,
+  avatar: String,
+  twitter: String,
+  favorite: { type: Boolean, default: false }
+});
+
+const Contact = mongoose.model("Contact", contactSchema);
+
+// ========== Seed Data ========== //
+Contact.create({
+  first: "Scott",
+  last: "Smerchek",
+  avatar: "https://sessionize.com/image/907a-400o400o2-9TM2CCmvrw6ttmJiTw4Lz8.jpg",
+  twitter: "@smerchek"
+});
+
 // ========== Routes ========== //
 
 // Root route
 server.get("/", (req, res) => {
-    res.send("Node.js REST API with Express.js");
+  res.send("Node.js REST API with Express.js and Mongoose");
 });
 
 // Get all contacts (GET /contacts)
 server.get("/contacts", async (req, res) => {
-    const contacts = await db
-        .collection("contacts") // Get the contacts collection from the database
-        .find() // Get all contacts from database
-        .sort({ first: 1, last: 1 }) // Sort by first name, then last name
-        .toArray(); // Get all contacts from database
-    res.json(contacts); // Send the results as JSON
+  try {
+    const contacts = await Contact.find().sort({ first: 1, last: 1 });
+    res.json(contacts);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch contacts", error });
+  }
 });
 
 // Search contacts (GET /contacts/search?q=)
 server.get("/contacts/search", async (req, res) => {
-    const searchString = req.query.q.toLowerCase(); // get query string from request URL and lowercase it
-    const query = {
-        $or: [
-            { first: { $regex: searchString, $options: "i" } },
-            { last: { $regex: searchString, $options: "i" } }
-        ]
-    }; // MongoDB query
-
-    const results = await db
-        .collection("contacts") // Get the contacts collection from the database
-        .find(query) // Find contacts matching query
-        .sort({ first: 1, last: 1 }) // Sort by first name, then last name
-        .toArray(); // Execute the query
-
-    res.json(results); // Send the results as JSON
+  const searchString = req.query.q || "";
+  try {
+    const results = await Contact.find({
+      $or: [
+        { first: { $regex: searchString, $options: "i" } },
+        { last: { $regex: searchString, $options: "i" } }
+      ]
+    }).sort({ first: 1, last: 1 });
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to search contacts", error });
+  }
 });
 
 // Get single contact (GET /contacts/:id)
 server.get("/contacts/:id", async (req, res) => {
-    const id = req.params.id; // get id from request URL
-    const contact = await db
-        .collection("contacts")
-        .findOne({ _id: new ObjectId(id) }); // Get contact from database
+  const { id } = req.params;
 
+  try {
+    const contact = await Contact.findById(id);
     if (contact) {
-        res.json(contact); // return first contact from results as JSON
+      res.json(contact);
     } else {
-        res.status(404).json({ message: "Contact not found!" }); // otherwise return 404 and error message
+      res.status(404).json({ message: "Contact not found!" });
     }
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching contact", error });
+  }
 });
 
 // Create contact (POST /contacts)
 server.post("/contacts", async (req, res) => {
-    const newContact = req.body; // get new contact object from request body
-
-    const result = await db.collection("contacts").insertOne(newContact); // Insert new contact into database
-
-    if (result.acknowledged) {
-        res.json({ message: "Created new contact", _id: result.insertedId }); // return message and id of new contact
-    } else {
-        res.status(500).json({ message: "Failed to create new contact" }); // return error message
-    }
+  try {
+    const newContact = new Contact(req.body);
+    const savedContact = await newContact.save();
+    res.status(201).json({ message: "Created new contact", _id: savedContact._id });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to create new contact", error });
+  }
 });
 
 // Update contact (PUT /contacts/:id)
 server.put("/contacts/:id", async (req, res) => {
-    const id = req.params.id; // get id from request URL
-    const updatedContact = req.body; // get updated properties from request body
-    const result = await db
-        .collection("contacts")
-        .updateOne({ _id: new ObjectId(id) }, { $set: updatedContact }); // Update contact in database
-
-    if (result.acknowledged) {
-        res.json({ message: `Updated contact with id ${id}` }); // return message
+  try {
+    const updatedContact = await Contact.findByIdAndUpdate(req.params.id, req.body, {
+      new: true
+    });
+    if (updatedContact) {
+      res.json({ message: `Updated contact with id ${req.params.id}`, updatedContact });
     } else {
-        res.status(500).json({ message: "Failed to update contact" }); // return error message
+      res.status(404).json({ message: "Contact not found!" });
     }
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update contact", error });
+  }
 });
 
 // Delete contact (DELETE /contacts/:id)
 server.delete("/contacts/:id", async (req, res) => {
-    const id = req.params.id; // get id from request URL
-
-    const result = await db
-        .collection("contacts")
-        .deleteOne({ _id: new ObjectId(id) }); // Delete contact from database
-
-    if (result.acknowledged) {
-        res.json({ message: `Deleted contact with id ${id}` }); // return message
+  try {
+    const result = await Contact.findByIdAndDelete(req.params.id);
+    if (result) {
+      res.json({ message: `Deleted contact with id ${req.params.id}` });
     } else {
-        res.status(500).json({ message: "Failed to delete contact" }); // return error message
+      res.status(404).json({ message: "Contact not found!" });
     }
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete contact", error });
+  }
 });
 
-// Toggle favorite property of contact (PUT /contacts/:id/favorite)
+// Toggle favorite property of contact (PATCH /contacts/:id/favorite)
 server.patch("/contacts/:id/favorite", async (req, res) => {
-    const id = req.params.id; // get id from request URL
-
-    const contact = await db
-        .collection("contacts")
-        .findOne({ _id: new ObjectId(id) }); // Get the contact from the database
-
+  try {
+    const contact = await Contact.findById(req.params.id);
     if (contact) {
-        const newFavoriteValue = !contact.favorite; // Toggle the favorite field
-        // Update the contact in the database
-        await db
-            .collection("contacts")
-            .updateOne(
-                { _id: new ObjectId(id) },
-                { $set: { favorite: newFavoriteValue } }
-            );
-
-        res.json({
-            message: `Toggled favorite property of contact with id ${id}`
-        }); // return message
+      contact.favorite = !contact.favorite;
+      await contact.save();
+      res.json({
+        message: `Toggled favorite property of contact with id ${req.params.id}`
+      });
     } else {
-        res.status(404).json({ message: "Contact not found!" }); // return 404 if contact was not found
+      res.status(404).json({ message: "Contact not found!" });
     }
+  } catch (error) {
+    res.status(500).json({ message: "Failed to toggle favorite", error });
+  }
 });
 
 // ========== Start server ========== //
 
 // Start server on port 3000
 server.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
