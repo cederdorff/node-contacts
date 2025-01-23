@@ -103,7 +103,7 @@ server.delete("/contacts/:id", async (req, res) => {
   }
 });
 
-// Toggle favorite property of contact (PUT /contacts/:id/favorite)
+// Toggle favorite property of contact (PATCH /contacts/:id/favorite)
 server.patch("/contacts/:id/favorite", async (req, res) => {
   const id = req.params.id; // get id from request URL
 
