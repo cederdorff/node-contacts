@@ -1,4 +1,4 @@
-// Imports
+// ========== Imports ========== //
 import express from "express";
 import cors from "cors";
 import db from "./database.js";
@@ -126,7 +126,7 @@ server.patch("/contacts/:id/favorite", async (req, res) => {
 
 // ========== Start server ========== //
 
-// Start server on port 3000
+// Start server on port (3000)
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
