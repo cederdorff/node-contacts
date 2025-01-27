@@ -1,5 +1,5 @@
 // ========== Imports ========== //
-import express from "express";
+import express, { Request, Response } from "express";
 import cors from "cors";
 import db from "./database.js";
 import { ObjectId } from "mongodb";
@@ -14,16 +14,27 @@ const PORT = process.env.PORT || 3000;
 server.use(express.json()); // to parse JSON bodies
 server.use(cors()); // Enable CORS for all routes
 
+// ========== Types ========== //
+type Contact = {
+  _id: ObjectId;
+  first?: string;
+  last?: string;
+  avatar?: string;
+  twitter?: string;
+  notes?: string;
+  favorite?: boolean;
+};
+
 // ========== Routes ========== //
 
 // Root route
-server.get("/", (req, res) => {
+server.get("/", (req: Request, res: Response) => {
   res.send("Node.js REST API with Express.js");
 });
 
 // Get all contacts (GET /contacts)
 server.get("/contacts", async (req, res) => {
-  const contacts = await db
+  const contacts: Contact[] = await db
     .collection("contacts") // Get the contacts collection from the database
     .find() // Get all contacts from database
     .sort({ first: 1, last: 1 }) // Sort by first name, then last name
@@ -32,8 +43,9 @@ server.get("/contacts", async (req, res) => {
 });
 
 // Search contacts (GET /contacts/search?q=)
-server.get("/contacts/search", async (req, res) => {
-  const searchString = req.query.q.toLowerCase(); // get query string from request URL and lowercase it
+server.get("/contacts/search", async (req: Request, res: Response) => {
+  const searchString = (req.query.q as string)?.toLowerCase() || "";
+  // get query string from request URL and lowercase it
   const query = {
     $or: [
       { first: { $regex: searchString, $options: "i" } },
@@ -51,7 +63,7 @@ server.get("/contacts/search", async (req, res) => {
 });
 
 // Get single contact (GET /contacts/:id)
-server.get("/contacts/:id", async (req, res) => {
+server.get("/contacts/:id", async (req: Request, res: Response) => {
   const id = req.params.id; // get id from request URL
   const contact = await db.collection("contacts").findOne({ _id: new ObjectId(id) }); // Get contact from database
 
@@ -63,7 +75,7 @@ server.get("/contacts/:id", async (req, res) => {
 });
 
 // Create contact (POST /contacts)
-server.post("/contacts", async (req, res) => {
+server.post("/contacts", async (req: Request, res: Response) => {
   const newContact = req.body; // get new contact object from request body
 
   const result = await db.collection("contacts").insertOne(newContact); // Insert new contact into database
@@ -76,7 +88,7 @@ server.post("/contacts", async (req, res) => {
 });
 
 // Update contact (PUT /contacts/:id)
-server.put("/contacts/:id", async (req, res) => {
+server.put("/contacts/:id", async (req: Request, res: Response) => {
   const id = req.params.id; // get id from request URL
   const updatedContact = req.body; // get updated properties from request body
   const result = await db
@@ -91,7 +103,7 @@ server.put("/contacts/:id", async (req, res) => {
 });
 
 // Delete contact (DELETE /contacts/:id)
-server.delete("/contacts/:id", async (req, res) => {
+server.delete("/contacts/:id", async (req: Request, res: Response) => {
   const id = req.params.id; // get id from request URL
 
   const result = await db.collection("contacts").deleteOne({ _id: new ObjectId(id) }); // Delete contact from database
@@ -104,7 +116,7 @@ server.delete("/contacts/:id", async (req, res) => {
 });
 
 // Toggle favorite property of contact (PATCH /contacts/:id/favorite)
-server.patch("/contacts/:id/favorite", async (req, res) => {
+server.patch("/contacts/:id/favorite", async (req: Request, res: Response) => {
   const id = req.params.id; // get id from request URL
 
   const contact = await db.collection("contacts").findOne({ _id: new ObjectId(id) }); // Get the contact from the database
