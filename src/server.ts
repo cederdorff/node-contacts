@@ -11,18 +11,27 @@ const server = express();
 const PORT = process.env.PORT || 3000;
 
 // Configure middleware
-server.use(express.json()); // to parse JSON bodies
+server.use(express.json()); // Parse JSON bodies
 server.use(cors()); // Enable CORS for all routes
 
 // ========== Types ========== //
 type Contact = {
-  _id: ObjectId;
+  _id?: ObjectId; // Optional during creation
   first?: string;
   last?: string;
   avatar?: string;
   twitter?: string;
   notes?: string;
   favorite?: boolean;
+};
+
+type ContactResponse = {
+  message: string;
+  _id?: ObjectId;
+};
+
+type errorResponse = {
+  message: string;
 };
 
 // ========== Routes ========== //
@@ -33,107 +42,108 @@ server.get("/", (req: Request, res: Response) => {
 });
 
 // Get all contacts (GET /contacts)
-server.get("/contacts", async (req, res) => {
-  const contacts: Contact[] = await db
-    .collection("contacts") // Get the contacts collection from the database
-    .find() // Get all contacts from database
-    .sort({ first: 1, last: 1 }) // Sort by first name, then last name
-    .toArray(); // Get all contacts from database
-  res.json(contacts); // Send the results as JSON
+server.get("/contacts", async (req: Request, res: Response<Contact[] | errorResponse>) => {
+  try {
+    const contacts = await db.collection<Contact>("contacts").find().sort({ first: 1, last: 1 }).toArray();
+    res.json(contacts);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching contacts" });
+  }
 });
 
 // Search contacts (GET /contacts/search?q=)
-server.get("/contacts/search", async (req: Request, res: Response) => {
+server.get("/contacts/search", async (req: Request, res: Response<Contact[] | errorResponse>) => {
   const searchString = (req.query.q as string)?.toLowerCase() || "";
-  // get query string from request URL and lowercase it
   const query = {
-    $or: [
-      { first: { $regex: searchString, $options: "i" } },
-      { last: { $regex: searchString, $options: "i" } }
-    ]
-  }; // MongoDB query
+    $or: [{ first: { $regex: searchString, $options: "i" } }, { last: { $regex: searchString, $options: "i" } }]
+  };
 
-  const results: Contact[] = await db
-    .collection("contacts") // Get the contacts collection from the database
-    .find(query) // Find contacts matching query
-    .sort({ first: 1, last: 1 }) // Sort by first name, then last name
-    .toArray(); // Execute the query
-
-  res.json(results); // Send the results as JSON
+  try {
+    const results = await db.collection<Contact>("contacts").find(query).sort({ first: 1, last: 1 }).toArray();
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ message: "Error searching contacts" });
+  }
 });
 
 // Get single contact (GET /contacts/:id)
-server.get("/contacts/:id", async (req, res) => {
-  req.prmas.id;
-  const id = req.params.id; // get id from request URL
-  const contact = await db.collection("contacts").findOne({ _id: new ObjectId(id) }); // Get contact from database
-
-  if (contact) {
-    res.json(contact); // return first contact from results as JSON
-  } else {
-    res.status(404).json({ message: "Contact not found!" }); // otherwise return 404 and error message
+server.get("/contacts/:id", async (req: Request<{ id: string }>, res: Response<Contact | errorResponse>) => {
+  const id = req.params.id;
+  try {
+    const contact = await db.collection<Contact>("contacts").findOne({ _id: new ObjectId(id) });
+    if (contact) {
+      res.json(contact);
+    } else {
+      res.status(404).json({ message: "Contact not found!" });
+    }
+  } catch (error) {
+    res.status(400).json({ message: "Invalid ID format" });
   }
 });
 
 // Create contact (POST /contacts)
-server.post("/contacts", async (req: Request, res: Response) => {
-  const newContact = req.body; // get new contact object from request body
-
-  const result = await db.collection("contacts").insertOne(newContact); // Insert new contact into database
-
-  if (result.acknowledged) {
-    res.json({ message: "Created new contact", _id: result.insertedId }); // return message and id of new contact
-  } else {
-    res.status(500).json({ message: "Failed to create new contact" }); // return error message
+server.post("/contacts", async (req: Request<{}, {}, Contact>, res: Response<ContactResponse>) => {
+  const newContact = req.body;
+  try {
+    const result = await db.collection<Contact>("contacts").insertOne(newContact);
+    res.json({ message: "Created new contact", _id: result.insertedId });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to create new contact" });
   }
 });
 
 // Update contact (PUT /contacts/:id)
-server.put("/contacts/:id", async (req: Request, res: Response) => {
-  const id = req.params.id; // get id from request URL
-  const updatedContact: Contact = req.body; // get updated properties from request body
-  const result = await db
-    .collection("contacts")
-    .updateOne({ _id: new ObjectId(id) }, { $set: updatedContact }); // Update contact in database
+server.put("/contacts/:id", async (req: Request<{ id: string }, {}, Contact>, res: Response<ContactResponse>) => {
+  const id = req.params.id;
+  const updatedContact = req.body;
+  try {
+    const result = await db
+      .collection<Contact>("contacts")
+      .updateOne({ _id: new ObjectId(id) }, { $set: updatedContact });
 
-  if (result.acknowledged) {
-    res.json({ message: `Updated contact with id ${id}` }); // return message
-  } else {
-    res.status(500).json({ message: "Failed to update contact" }); // return error message
+    if (result.matchedCount > 0) {
+      res.json({ message: `Updated contact with id ${id}` });
+    } else {
+      res.status(404).json({ message: "Contact not found!" });
+    }
+  } catch (error) {
+    res.status(400).json({ message: "Invalid ID format" });
   }
 });
 
 // Delete contact (DELETE /contacts/:id)
-server.delete("/contacts/:id", async (req: Request, res: Response) => {
-  const id = req.params.id; // get id from request URL
-
-  const result = await db.collection("contacts").deleteOne({ _id: new ObjectId(id) }); // Delete contact from database
-
-  if (result.acknowledged) {
-    res.json({ message: `Deleted contact with id ${id}` }); // return message
-  } else {
-    res.status(500).json({ message: "Failed to delete contact" }); // return error message
+server.delete("/contacts/:id", async (req: Request<{ id: string }>, res: Response<ContactResponse>) => {
+  const id = req.params.id;
+  try {
+    const result = await db.collection<Contact>("contacts").deleteOne({ _id: new ObjectId(id) });
+    if (result.deletedCount > 0) {
+      res.json({ message: `Deleted contact with id ${id}` });
+    } else {
+      res.status(404).json({ message: "Contact not found!" });
+    }
+  } catch (error) {
+    res.status(400).json({ message: "Invalid ID format" });
   }
 });
 
 // Toggle favorite property of contact (PATCH /contacts/:id/favorite)
-server.patch("/contacts/:id/favorite", async (req: Request, res: Response) => {
-  const id = req.params.id; // get id from request URL
+server.patch("/contacts/:id/favorite", async (req: Request<{ id: string }>, res: Response<ContactResponse>) => {
+  const id = req.params.id;
+  try {
+    const contact = await db.collection<Contact>("contacts").findOne({ _id: new ObjectId(id) });
 
-  const contact = await db.collection("contacts").findOne({ _id: new ObjectId(id) }); // Get the contact from the database
+    if (contact) {
+      const newFavoriteValue = !contact.favorite;
+      await db
+        .collection<Contact>("contacts")
+        .updateOne({ _id: new ObjectId(id) }, { $set: { favorite: newFavoriteValue } });
 
-  if (contact) {
-    const newFavoriteValue = !contact.favorite; // Toggle the favorite field
-    // Update the contact in the database
-    await db
-      .collection("contacts")
-      .updateOne({ _id: new ObjectId(id) }, { $set: { favorite: newFavoriteValue } });
-
-    res.json({
-      message: `Toggled favorite property of contact with id ${id}`
-    }); // return message
-  } else {
-    res.status(404).json({ message: "Contact not found!" }); // return 404 if contact was not found
+      res.json({ message: `Toggled favorite property of contact with id ${id}` });
+    } else {
+      res.status(404).json({ message: "Contact not found!" });
+    }
+  } catch (error) {
+    res.status(400).json({ message: "Invalid ID format" });
   }
 });
 

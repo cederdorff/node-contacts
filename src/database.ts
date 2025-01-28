@@ -1,12 +1,29 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, Db } from "mongodb";
 
-const client = new MongoClient(process.env.MONGODB_URI || "");
+const mongoUri = process.env.MONGODB_URI || "";
+const databaseName = process.env.MONGODB_DATABASE || "";
 
-async function getDatabase() {
+if (!mongoUri) {
+  throw new Error("MONGODB_URI is not defined in environment variables.");
+}
+if (!databaseName) {
+  throw new Error("MONGODB_DATABASE is not defined in environment variables.");
+}
+
+const client = new MongoClient(mongoUri);
+
+let dbInstance: Db | null = null;
+
+async function getDatabase(): Promise<Db> {
+  if (dbInstance) {
+    return dbInstance; // Return existing instance if already connected
+  }
+
   try {
     await client.connect();
-    const db = client.db(process.env.MONGODB_DATABASE);
-    return db;
+    dbInstance = client.db(databaseName);
+    console.log(`Connected to database: ${databaseName}`);
+    return dbInstance;
   } catch (error) {
     console.error("Failed to connect to the database:", error);
     throw error;
@@ -15,15 +32,21 @@ async function getDatabase() {
 
 // Automatically close the database connection when the Node.js process exits
 process.on("exit", async () => {
-  await client.close();
+  if (client) {
+    await client.close();
+    console.log("Database connection closed due to process exit.");
+  }
 });
 
-// Handle CTRL+C events
+// Handle CTRL+C events (SIGINT)
 process.on("SIGINT", async () => {
-  await client.close();
+  if (client) {
+    await client.close();
+    console.log("Database connection closed due to SIGINT.");
+  }
   process.exit();
 });
 
-const db = await getDatabase(); // Connect to the MongoDB database
+const db = await getDatabase();
 
 export default db;
