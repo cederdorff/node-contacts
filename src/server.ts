@@ -53,7 +53,7 @@ server.get("/contacts/search", async (req: Request, res: Response) => {
     ]
   }; // MongoDB query
 
-  const results = await db
+  const results: Contact[] = await db
     .collection("contacts") // Get the contacts collection from the database
     .find(query) // Find contacts matching query
     .sort({ first: 1, last: 1 }) // Sort by first name, then last name
@@ -63,7 +63,8 @@ server.get("/contacts/search", async (req: Request, res: Response) => {
 });
 
 // Get single contact (GET /contacts/:id)
-server.get("/contacts/:id", async (req: Request, res: Response) => {
+server.get("/contacts/:id", async (req, res) => {
+  req.prmas.id;
   const id = req.params.id; // get id from request URL
   const contact = await db.collection("contacts").findOne({ _id: new ObjectId(id) }); // Get contact from database
 
@@ -90,7 +91,7 @@ server.post("/contacts", async (req: Request, res: Response) => {
 // Update contact (PUT /contacts/:id)
 server.put("/contacts/:id", async (req: Request, res: Response) => {
   const id = req.params.id; // get id from request URL
-  const updatedContact = req.body; // get updated properties from request body
+  const updatedContact: Contact = req.body; // get updated properties from request body
   const result = await db
     .collection("contacts")
     .updateOne({ _id: new ObjectId(id) }, { $set: updatedContact }); // Update contact in database
