@@ -2,7 +2,6 @@
 use("remix_contacts");
 
 // drop collection
-// db.getCollection("contacts").drop();
 db.contacts.drop();
 
 // Create a new collection.
