@@ -6,7 +6,7 @@ use("remix_contacts");
 db.contacts.drop();
 
 // Create a new collection.
-db.getCollection("contacts").insertMany([
+db.contacts.insertMany([
   {
     avatar: "https://sessionize.com/image/124e-400o400o2-wHVdAuNaxi8KJrgtN3ZKci.jpg",
     first: "Shruti",
