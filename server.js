@@ -17,8 +17,11 @@ server.use(cors()); // Enable CORS for all routes
 // ========== Routes ========== //
 
 // Root route
-server.get("/", (req, res) => {
-  res.send("Node.js REST API with Express.js");
+server.get("/", async (req, res) => {
+  const adminDb = db.admin();
+  const result = await adminDb.command({ ping: 1 });
+  console.log("✅ MongoDB Ping Successful:", result);
+  res.send("Node.js REST API with Express.js successfully connected to MongoDB!");
 });
 
 // Get all contacts (GET /contacts)
@@ -35,10 +38,7 @@ server.get("/contacts", async (req, res) => {
 server.get("/contacts/search", async (req, res) => {
   const searchString = req.query.q.toLowerCase(); // get query string from request URL and lowercase it
   const query = {
-    $or: [
-      { first: { $regex: searchString, $options: "i" } },
-      { last: { $regex: searchString, $options: "i" } }
-    ]
+    $or: [{ first: { $regex: searchString, $options: "i" } }, { last: { $regex: searchString, $options: "i" } }]
   }; // MongoDB query
 
   const results = await db
@@ -79,9 +79,7 @@ server.post("/contacts", async (req, res) => {
 server.put("/contacts/:id", async (req, res) => {
   const id = req.params.id; // get id from request URL
   const updatedContact = req.body; // get updated properties from request body
-  const result = await db
-    .collection("contacts")
-    .updateOne({ _id: new ObjectId(id) }, { $set: updatedContact }); // Update contact in database
+  const result = await db.collection("contacts").updateOne({ _id: new ObjectId(id) }, { $set: updatedContact }); // Update contact in database
 
   if (result.acknowledged) {
     res.json({ message: `Updated contact with id ${id}` }); // return message
@@ -112,9 +110,7 @@ server.patch("/contacts/:id/favorite", async (req, res) => {
   if (contact) {
     const newFavoriteValue = !contact.favorite; // Toggle the favorite field
     // Update the contact in the database
-    await db
-      .collection("contacts")
-      .updateOne({ _id: new ObjectId(id) }, { $set: { favorite: newFavoriteValue } });
+    await db.collection("contacts").updateOne({ _id: new ObjectId(id) }, { $set: { favorite: newFavoriteValue } });
 
     res.json({
       message: `Toggled favorite property of contact with id ${id}`
