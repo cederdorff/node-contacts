@@ -5,7 +5,9 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "start": "node --env-file=.env --watch server.js"
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
   },
   "author": "Rasmus Cederdorff (RACE)",
   "license": "ISC",
@@ -14,5 +16,11 @@
     "express": "^4.21.2",
     "mongodb": "^6.3.0",
     "mysql2": "^3.7.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   }
 }
