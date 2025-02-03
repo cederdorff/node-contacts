@@ -1,3 +1,4 @@
+import { Request, Response } from "express";
 import {
   getAllContacts,
   searchContacts,
@@ -7,20 +8,23 @@ import {
   deleteContact,
   toggleFavorite
 } from "../models/contactsModel.js";
+import Contact from "../types/contact.js";
+import ErrorResponse from "../types/errorResponse.js";
+import SuccessResponse from "../types/successResponse.js";
 
-export async function fetchAllContacts(req, res) {
-  const contacts = await getAllContacts();
+export async function fetchAllContacts(req: Request, res: Response<Contact[]>) {
+  const contacts: Contact[] = await getAllContacts();
   res.json(contacts);
 }
 
-export async function searchForContacts(req, res) {
-  const searchString = req.query.q.toLowerCase();
-  const results = await searchContacts(searchString);
+export async function searchForContacts(req: Request, res: Response<Contact[]>) {
+  const searchString = (req.query.q as string)?.toLowerCase();
+  const results: Contact[] = await searchContacts(searchString);
   res.json(results);
 }
 
-export async function fetchContactById(req, res) {
-  const contact = await getContactById(req.params.id);
+export async function fetchContactById(req: Request, res: Response<Contact | ErrorResponse>) {
+  const contact: Contact | null = await getContactById(req.params.id);
   if (contact) {
     res.json(contact);
   } else {
@@ -28,7 +32,7 @@ export async function fetchContactById(req, res) {
   }
 }
 
-export async function addNewContact(req, res) {
+export async function addNewContact(req: Request, res: Response<SuccessResponse | ErrorResponse>) {
   const result = await createContact(req.body);
   if (result.acknowledged) {
     res.json({ message: "Created new contact", _id: result.insertedId });
@@ -37,7 +41,7 @@ export async function addNewContact(req, res) {
   }
 }
 
-export async function modifyContact(req, res) {
+export async function modifyContact(req: Request, res: Response<SuccessResponse | ErrorResponse>) {
   const result = await updateContact(req.params.id, req.body);
   if (result.modifiedCount > 0) {
     res.json({ message: `Updated contact with id ${req.params.id}` });
@@ -46,7 +50,7 @@ export async function modifyContact(req, res) {
   }
 }
 
-export async function removeContact(req, res) {
+export async function removeContact(req: Request, res: Response<SuccessResponse | ErrorResponse>) {
   const result = await deleteContact(req.params.id);
   if (result.deletedCount > 0) {
     res.json({ message: `Deleted contact with id ${req.params.id}` });
@@ -55,8 +59,10 @@ export async function removeContact(req, res) {
   }
 }
 
-export async function toggleContactFavorite(req, res) {
+export async function toggleContactFavorite(req: Request, res: Response<SuccessResponse | ErrorResponse>) {
   const result = await toggleFavorite(req.params.id);
+  console.log(result);
+
   if (result) {
     res.json({ message: `Toggled favorite for contact with id ${req.params.id}` });
   } else {
