@@ -31,7 +31,7 @@ export function deleteContact(id: string): Promise<{ deletedCount: number }> {
   return collection.deleteOne({ _id: new ObjectId(id) });
 }
 
-export async function toggleFavorite(id: string): Promise<any> {
+export async function toggleFavorite(id: string) {
   const contact = await getContactById(id);
   if (!contact) return null;
   return collection.updateOne({ _id: new ObjectId(id) }, { $set: { favorite: !contact.favorite } });

@@ -61,8 +61,6 @@ export async function removeContact(req: Request, res: Response<SuccessResponse 
 
 export async function toggleContactFavorite(req: Request, res: Response<SuccessResponse | ErrorResponse>) {
   const result = await toggleFavorite(req.params.id);
-  console.log(result);
-
   if (result) {
     res.json({ message: `Toggled favorite for contact with id ${req.params.id}` });
   } else {
