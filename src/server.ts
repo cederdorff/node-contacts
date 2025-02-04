@@ -1,6 +1,6 @@
 // ========== Imports ========== //
 import cors from "cors";
-import express from "express";
+import express, { Request, Response } from "express";
 import contactsRouter from "./routes/contactsRoutes.js";
 
 // ========== Setup ========== //
@@ -17,7 +17,7 @@ server.use("/contacts", contactsRouter); // Mount contacts router
 // ========== Routes ========== //
 
 // Root route
-server.get("/", async (req, res) => {
+server.get("/", async (req: Request, res: Response<string>) => {
   res.send("Node.js REST API with Express.js successfully connected to MongoDB!");
 });
 
